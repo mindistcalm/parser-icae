@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { StaticModeBanner } from "@/components/StaticModeBanner"
 
 export function ReportsPage() {
   const { data, isLoading } = useQuery({
@@ -15,6 +16,7 @@ export function ReportsPage() {
 
   return (
     <div className="space-y-6">
+      <StaticModeBanner />
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Отчёты</h1>
         <p className="text-muted-foreground">

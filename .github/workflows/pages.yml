@@ -1,0 +1,84 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      run_parser:
+        description: "Запустить поиск за прошлый месяц перед публикацией"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: pip install -e .
+
+      - name: Write API keys from secrets
+        if: ${{ secrets.VK_ACCESS_TOKEN != '' || secrets.YANDEX_SEARCH_API_KEY != '' }}
+        env:
+          VK_ACCESS_TOKEN: ${{ secrets.VK_ACCESS_TOKEN }}
+          YANDEX_SEARCH_API_KEY: ${{ secrets.YANDEX_SEARCH_API_KEY }}
+          YANDEX_FOLDER_ID: ${{ secrets.YANDEX_FOLDER_ID }}
+        run: |
+          cat > env.txt <<EOF
+          VK_ACCESS_TOKEN=${VK_ACCESS_TOKEN}
+          YANDEX_SEARCH_API_KEY=${YANDEX_SEARCH_API_KEY}
+          YANDEX_FOLDER_ID=${YANDEX_FOLDER_ID}
+          EOF
+
+      - name: Run monthly parser
+        if: github.event.inputs.run_parser == 'true'
+        run: icae-parser run
+
+      - name: Export static data
+        run: python scripts/export_static_data.py
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install and build frontend
+        working-directory: web
+        env:
+          VITE_BASE_PATH: /parser-icae/
+          VITE_STATIC: "true"
+        run: |
+          npm ci
+          npm run build
+          cp dist/index.html dist/404.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment

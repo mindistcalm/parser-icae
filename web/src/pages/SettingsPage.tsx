@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Save, KeyRound, CheckCircle2 } from "lucide-react"
 import { useEffect, useState } from "react"
-import { api, type Settings } from "@/lib/api"
+import { api, isStaticMode, type Settings } from "@/lib/api"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Alert } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { StaticModeBanner } from "@/components/StaticModeBanner"
 
 export function SettingsPage() {
   const queryClient = useQueryClient()
@@ -48,6 +49,7 @@ export function SettingsPage() {
 
   return (
     <div className="space-y-6">
+      <StaticModeBanner />
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Настройки API</h1>
         <p className="text-muted-foreground">
@@ -66,7 +68,9 @@ export function SettingsPage() {
         <CardHeader>
           <CardTitle>Токены и ключи</CardTitle>
           <CardDescription>
-            VK — для поиска постов. Yandex — для стабильного веб-поиска. Без ключей используется DuckDuckGo.
+            {isStaticMode
+              ? "На GitHub Pages ключи не сохраняются. Добавьте secrets в репозиторий или используйте локальный сервер."
+              : "VK — для поиска постов. Yandex — для стабильного веб-поиска. Без ключей используется DuckDuckGo."}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -124,7 +128,7 @@ export function SettingsPage() {
           <div className="flex items-center gap-3">
             <Button
               onClick={() => saveMutation.mutate(form)}
-              disabled={saveMutation.isPending}
+              disabled={saveMutation.isPending || isStaticMode}
             >
               <Save className="h-4 w-4" />
               Сохранить в env.txt

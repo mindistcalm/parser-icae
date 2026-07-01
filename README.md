@@ -73,6 +73,35 @@ YANDEX_SEARCH_API_KEY=...
 YANDEX_FOLDER_ID=...
 ```
 
+## GitHub Pages
+
+Сайт публикуется автоматически при push в `main`:
+
+**https://mindistcalm.github.io/parser-icae/**
+
+### Первоначальная настройка (один раз)
+
+1. GitHub → **Settings** → **Pages**
+2. **Source** → **GitHub Actions**
+3. Запушьте `main` — workflow соберёт и опубликует сайт
+
+### Что работает на Pages
+
+| Функция | GitHub Pages | Локально |
+|---------|:------------:|:--------:|
+| Просмотр упоминаний | ✅ | ✅ |
+| Скачивание отчётов | ✅ | ✅ |
+| Запуск поиска | ❌ | ✅ |
+| Настройка API-ключей | ❌ | ✅ |
+
+### Обновить данные на сайте
+
+Локально: `icae-parser run` → `git push`
+
+Или в GitHub: **Actions** → **Deploy GitHub Pages** → **Run workflow** с опцией `run_parser`.
+
+Опциональные secrets: `VK_ACCESS_TOKEN`, `YANDEX_SEARCH_API_KEY`, `YANDEX_FOLDER_ID`.
+
 ## Быстрый старт (CLI)
 
 ```bash

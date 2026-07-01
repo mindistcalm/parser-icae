@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
+import { StaticModeBanner } from "@/components/StaticModeBanner"
 
 function previousMonthValue() {
   const d = new Date()
@@ -45,6 +46,7 @@ export function MentionsPage() {
 
   return (
     <div className="space-y-6">
+      <StaticModeBanner />
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Упоминания</h1>
         <p className="text-muted-foreground">

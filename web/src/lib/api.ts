@@ -56,6 +56,13 @@ export interface Job {
   finished_at: string | null
 }
 
+export const isStaticMode = import.meta.env.VITE_STATIC === "true"
+const base = import.meta.env.BASE_URL
+
+function assetUrl(path: string): string {
+  return `${base}${path.replace(/^\//, "")}`
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
     headers: { "Content-Type": "application/json", ...init?.headers },
@@ -68,7 +75,22 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>
 }
 
-export const api = {
+async function staticGet<T>(url: string): Promise<T> {
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`Не удалось загрузить ${url}`)
+  return res.json() as Promise<T>
+}
+
+let manifestCache: Dashboard | null = null
+
+async function getManifest(): Promise<Dashboard> {
+  if (!manifestCache) {
+    manifestCache = await staticGet<Dashboard>(assetUrl("data/manifest.json"))
+  }
+  return manifestCache
+}
+
+const liveApi = {
   dashboard: () => request<Dashboard>("/api/dashboard"),
   settings: {
     get: () => request<Settings>("/api/settings"),
@@ -90,3 +112,30 @@ export const api = {
   reports: () => request<ReportFile[]>("/api/reports"),
   reportUrl: (filename: string) => `/api/reports/${filename}`,
 }
+
+const staticApi = {
+  dashboard: getManifest,
+  settings: {
+    get: async (): Promise<Settings> => ({
+      vk_access_token: "",
+      yandex_search_api_key: "",
+      yandex_folder_id: "",
+    }),
+    save: async (): Promise<Settings> => {
+      throw new Error("На GitHub Pages настройки недоступны — используйте локальный сервер")
+    },
+  },
+  mentions: (month: string) =>
+    staticGet<Mention[]>(assetUrl(`data/mentions-${month}.json`)).catch(() => []),
+  months: async () => (await getManifest()).months,
+  run: async () => {
+    throw new Error("Запуск поиска недоступен на GitHub Pages")
+  },
+  job: async () => {
+    throw new Error("Задачи недоступны на GitHub Pages")
+  },
+  reports: async () => (await getManifest()).latest_reports,
+  reportUrl: (filename: string) => assetUrl(`reports/${filename}`),
+}
+
+export const api = isStaticMode ? staticApi : liveApi

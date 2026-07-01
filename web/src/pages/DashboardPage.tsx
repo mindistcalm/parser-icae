@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Play, CheckCircle2, AlertCircle, Loader2 } from "lucide-react"
-import { api, type Job } from "@/lib/api"
+import { api, isStaticMode, type Job } from "@/lib/api"
 import { formatMonthLabel } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
+import { StaticModeBanner } from "@/components/StaticModeBanner"
 
 function previousMonthValue() {
   const d = new Date()
@@ -70,6 +71,7 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      <StaticModeBanner />
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Мониторинг ИЦАЭ</h1>
         <p className="text-muted-foreground">
@@ -113,12 +115,15 @@ export function DashboardPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Запустить сбор за месяц</CardTitle>
+          <CardTitle>{isStaticMode ? "Сбор данных" : "Запустить сбор за месяц"}</CardTitle>
           <CardDescription>
-            Поиск упоминаний и автоматическое формирование Excel/HTML отчёта
+            {isStaticMode
+              ? "На GitHub Pages доступен только просмотр. Для нового поиска запустите локально или включите workflow с опцией run_parser."
+              : "Поиск упоминаний и автоматическое формирование Excel/HTML отчёта"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {!isStaticMode && (
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
             <div className="space-y-2">
               <Label htmlFor="month">Месяц отчёта</Label>
@@ -149,8 +154,26 @@ export function DashboardPage() {
               Прошлый месяц
             </Button>
           </div>
+          )}
 
-          {job && (
+          {isStaticMode && data?.latest_reports && data.latest_reports.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {data.latest_reports.slice(0, 4).map((r) => (
+                <a
+                  key={r.filename}
+                  href={api.reportUrl(r.filename)}
+                  download={r.kind === "xlsx"}
+                  target={r.kind === "html" ? "_blank" : undefined}
+                  rel="noreferrer"
+                  className="inline-flex h-8 items-center rounded-md border px-3 text-xs font-medium hover:bg-accent"
+                >
+                  {r.kind === "xlsx" ? "Excel" : "HTML"} · {formatMonthLabel(r.month)}
+                </a>
+              ))}
+            </div>
+          )}
+
+          {!isStaticMode && job && (
             <Alert
               className={
                 job.status === "failed"

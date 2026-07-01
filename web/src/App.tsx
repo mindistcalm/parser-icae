@@ -15,10 +15,12 @@ const queryClient = new QueryClient({
   },
 })
 
+const basename = import.meta.env.BASE_URL.replace(/\/$/, "") || undefined
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      <BrowserRouter basename={basename}>
         <Routes>
           <Route element={<AppShell />}>
             <Route index element={<DashboardPage />} />
