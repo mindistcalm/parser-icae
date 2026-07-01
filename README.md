@@ -157,17 +157,62 @@ UI на React + shadcn для запуска поиска, просмотра у
 
 **https://mindistcalm.github.io/parser-icae/**
 
-### Настройка (один раз)
+На Pages — только просмотр сохранённых отчётов. Поиск запускается через GitHub Actions.
 
-1. GitHub → **Settings** → **Pages** → **Source: GitHub Actions**
-2. Push в `main`
+### Шаг 1. Включить Pages (один раз)
+
+1. Откройте репозиторий на GitHub: `https://github.com/mindistcalm/parser-icae`
+2. **Settings** → слева **Pages**
+3. В блоке **Build and deployment** → **Source** выберите **GitHub Actions**
+4. Сохраните (если нужно)
+
+### Шаг 2. Запустить поиск вручную (`run_parser`)
+
+1. Вкладка **Actions**
+2. Слева выберите workflow **Deploy GitHub Pages**
+3. Справа кнопка **Run workflow**
+4. Параметры:
+   - **Branch:** `main`
+   - **run_parser:** включить ✓ (по умолчанию уже включён)
+   - **month:** оставить пустым (прошлый месяц) или указать, например `2025-06`
+5. **Run workflow**
+
+Через 3–5 минут сайт обновится. Прогресс смотрите во вкладке **Actions** — зелёная галочка = готово.
+
+### Шаг 3. Автозапуск каждый месяц
+
+Уже настроено в `.github/workflows/pages.yml`:
+
+```yaml
+schedule:
+  - cron: "0 6 1 * *"   # 1-го числа в 09:00 МСК
+```
+
+**1-го числа** каждого месяца GitHub сам:
+1. запускает поиск за **прошлый** месяц (`icae-parser run`)
+2. публикует обновлённый сайт
+
+> Расписание срабатывает только если в репозитории были коммиты за последние 60 дней (ограничение GitHub).
+
+### Что происходит при `run_parser`
+
+```
+icae-parser run  →  data/mentions.db + reports/*.xlsx/html
+       ↓
+export_static_data.py  →  web/public/data/ + reports/
+       ↓
+npm run build  →  GitHub Pages
+```
+
+### Обычный push в main
+
+При push код деплоится на Pages, но **поиск не запускается** (только пересборка с уже имеющимися данными из кэша БД). Чтобы обновить упоминания — используйте **Run workflow** с `run_parser` или дождитесь 1-го числа.
 
 ### Обновить данные на сайте
 
-- Локально: `icae-parser run` → `git push`
-- Или: **Actions** → **Deploy GitHub Pages** → **Run workflow** с `run_parser`
-
-На Pages доступен только просмотр; поиск — локально или через workflow.
+- **Вручную:** Actions → Deploy GitHub Pages → Run workflow
+- **Автоматически:** 1-го числа каждого месяца
+- **Локально:** `icae-parser run` → затем Run workflow на GitHub (данные в репозитории не хранятся — поиск нужно гонять в Actions)
 
 ## Быстрый старт (CLI)
 

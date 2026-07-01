@@ -11,9 +11,8 @@ export function StaticModeBanner() {
       <div className="text-sm">
         <p className="font-medium text-blue-900">Режим GitHub Pages</p>
         <p className="text-blue-800">
-          Отображаются сохранённые отчёты. Для нового поиска запустите локально (
-          <code className="rounded bg-blue-100 px-1">./start-web.sh</code>
-          ) или workflow с опцией run_parser.
+          Отображаются сохранённые отчёты. Для нового поиска: GitHub → Actions → Deploy GitHub Pages → Run workflow (run_parser ✓). Или локально:{" "}
+          <code className="rounded bg-blue-100 px-1">./run.sh</code>.
         </p>
       </div>
     </Alert>

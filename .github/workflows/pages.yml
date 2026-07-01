@@ -3,13 +3,20 @@ name: Deploy GitHub Pages
 on:
   push:
     branches: [main]
+  # 1-го числа каждого месяца в 09:00 МСК (06:00 UTC) — поиск + публикация
+  schedule:
+    - cron: "0 6 1 * *"
   workflow_dispatch:
     inputs:
       run_parser:
-        description: "Запустить поиск за прошлый месяц перед публикацией"
+        description: "Запустить поиск перед публикацией"
         required: false
-        default: false
+        default: true
         type: boolean
+      month:
+        description: "Месяц отчёта YYYY-MM (пусто = прошлый месяц)"
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -30,12 +37,27 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Restore parser database cache
+        uses: actions/cache@v4
+        with:
+          path: data/mentions.db
+          key: mentions-db-${{ github.run_id }}
+          restore-keys: |
+            mentions-db-
+
       - name: Install Python dependencies
         run: pip install -e .
 
       - name: Run monthly parser
-        if: github.event.inputs.run_parser == 'true'
-        run: icae-parser run
+        if: >
+          github.event_name == 'schedule' ||
+          github.event.inputs.run_parser == 'true'
+        run: |
+          if [ -n "${{ github.event.inputs.month }}" ]; then
+            icae-parser run --month "${{ github.event.inputs.month }}"
+          else
+            icae-parser run
+          fi
 
       - name: Export static data
         run: python scripts/export_static_data.py
@@ -55,6 +77,15 @@ jobs:
           npm ci
           npm run build
           cp dist/index.html dist/404.html
+
+      - name: Save parser database cache
+        if: >
+          github.event_name == 'schedule' ||
+          github.event.inputs.run_parser == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: data/mentions.db
+          key: mentions-db-${{ github.run_id }}
 
       - uses: actions/upload-pages-artifact@v3
         with:
