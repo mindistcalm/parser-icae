@@ -1,0 +1,66 @@
+organization:
+  full_name: "Информационный центр по атомной энергии"
+  short_name: "ИЦАЭ"
+  city: "Томск"
+
+# Варианты написания для поиска
+search_keywords:
+  - "ИЦАЭ Томск"
+  - "ИЦАЕ Томск"
+  - "информационный центр по атомной энергии Томск"
+  - "информационный центр атомной энергии Томск"
+  - "информационный центр атомной энергетики Томск"
+  - "атомный центр Томск ИЦАЭ"
+  - "ИЦАЭ Томска"
+  - '"ИЦАЭ" Томск'
+
+# Слова, по которым определяем релевантность (хотя бы одно + Томск)
+mention_patterns:
+  - "ицаэ"
+  - "ицae"
+  - "ицae"
+  - "информационный центр"
+  - "атомный центр"
+  - "myatom"
+
+city_patterns:
+  - "томск"
+  - "tomsk"
+
+# Собственные ресурсы — исключаем из отчёта
+exclude_domains:
+  - "myatom.ru"
+  - "tomsk.myatom.ru"
+  - "atominfo.ru"
+
+exclude_urls:
+  - "vk.com/myatomtomsk"
+  - "vk.com/myatom"
+  - "t.me/myatom_tomsk"
+  - "t.me/myatomtomsk"
+  - "instagram.com/myatom"
+
+exclude_url_fragments:
+  - "myatomtomsk"
+  - "myatom_tomsk"
+  - "tomsk.myatom.ru"
+
+# Шаблоны URL статических страниц (не публикации)
+exclude_url_patterns:
+  - "/organizations/"
+  - "/venue/"
+  - "/org/"
+  - "/company/"
+
+# RSS-ленты (добавьте рабочие URL; многие томские СМИ RSS не публикуют)
+rss_feeds: []
+
+search:
+  max_results_per_query: 50
+  request_delay_seconds: 1.5
+
+storage:
+  database_path: "data/mentions.db"
+
+reports:
+  output_dir: "reports"

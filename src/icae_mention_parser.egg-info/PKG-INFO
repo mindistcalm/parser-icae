@@ -1,0 +1,127 @@
+Metadata-Version: 2.4
+Name: icae-mention-parser
+Version: 1.0.0
+Summary: Ежемесячный мониторинг упоминаний ИЦАЭ Томска в интернете
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: typer>=0.12
+Requires-Dist: httpx>=0.27
+Requires-Dist: beautifulsoup4>=4.12
+Requires-Dist: pydantic>=2.0
+Requires-Dist: pydantic-settings>=2.0
+Requires-Dist: pyyaml>=6.0
+Requires-Dist: openpyxl>=3.1
+Requires-Dist: python-dateutil>=2.9
+Requires-Dist: lxml>=5.0
+Requires-Dist: fastapi>=0.115
+Requires-Dist: uvicorn[standard]>=0.32
+
+# Мониторинг упоминаний ИЦАЭ Томска
+
+Приложение автоматизирует ежемесячный поиск упоминаний **Информационного центра по атомной энергии (ИЦАЭ)** в Томске в интернете: ВКонтакте, новостных сайтах, сайтах других организаций.
+
+В конце месяца формируется отчёт со списком ресурсов, где упомянули ИЦАЭ.
+
+## Что собирается
+
+| Поле | Описание |
+|------|----------|
+| Ресурс | Название сайта / ВКонтакте |
+| Заголовок | Название поста или статьи |
+| Ссылка | URL на публикацию |
+| Дата | Дата публикации (если доступна) |
+
+Собственные страницы (myatom.ru, vk.com/myatomtomsk, t.me/myatom_Tomsk и др.) **исключаются** из отчёта.
+
+## Источники поиска
+
+1. **Веб-поиск** — DuckDuckGo (по умолчанию) или Yandex Search API (если задан ключ)
+2. **VK API** — поиск постов во ВКонтакте (нужен токен)
+3. **RSS** — опционально, если добавите рабочие ленты в `config.yaml`
+
+## Быстрый старт
+
+```bash
+cd parser
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+
+# Создать .env и заполнить токены (опционально, но рекомендуется)
+icae-parser init
+```
+
+### Настройка API (рекомендуется)
+
+Скопируйте `.env.example` → `.env` и заполните:
+
+| Переменная | Зачем |
+|------------|-------|
+| `VK_ACCESS_TOKEN` | Поиск постов ВКонтакте ([документация VK](https://dev.vk.com/ru/api/access-token/getting-started)) |
+| `YANDEX_SEARCH_API_KEY` | Стабильный поиск через [Yandex Search API](https://yandex.cloud/ru/docs/search-api/) |
+| `YANDEX_FOLDER_ID` | ID каталога в Yandex Cloud |
+
+Без API-ключей используется DuckDuckGo. Для максимальной полноты рекомендуется VK-токен и Yandex Search API.
+
+### Запуск в конце месяца
+
+```bash
+# Поиск + отчёт за прошлый месяц (например, 30 июня → данные за июнь)
+icae-parser run
+
+# За конкретный месяц
+icae-parser run --month 2025-06
+
+# Только поиск
+icae-parser search --month 2025-06
+
+# Только отчёт по уже собранным данным
+icae-parser report --month 2025-06
+```
+
+Отчёты сохраняются в папку `reports/`:
+- `icae_mentions_2025_06.xlsx` — Excel для отчётности
+- `icae_mentions_2025_06.html` — HTML для просмотра в браузере
+
+## Автозапуск (cron)
+
+Добавьте в crontab задачу на последний день месяца в 18:00:
+
+```cron
+0 18 28-31 * * [ "$(date +\%d -d tomorrow)" = "01" ] && cd /home/mindistcalm/Desktop/parser && .venv/bin/icae-parser run >> logs/parser.log 2>&1
+```
+
+Или проще — 1-го числа каждого месяца в 9:00 за прошлый месяц:
+
+```cron
+0 9 1 * * cd /home/mindistcalm/Desktop/parser && .venv/bin/icae-parser run >> logs/parser.log 2>&1
+```
+
+## Настройка
+
+Все параметры — в `config.yaml`:
+
+- `search_keywords` — поисковые фразы
+- `mention_patterns` / `city_patterns` — фильтры релевантности
+- `exclude_domains` / `exclude_urls` — свои ресурсы для исключения
+- `rss_feeds` — RSS-ленты СМИ
+
+Добавьте в `exclude_urls` другие свои страницы, если появятся новые.
+
+## Структура проекта
+
+```
+parser/
+├── config.yaml          # настройки организации и поиска
+├── .env                 # токены API (не коммитить)
+├── data/mentions.db     # база найденных упоминаний
+├── reports/             # готовые отчёты
+└── src/parser/          # код приложения
+```
+
+## Ограничения
+
+- Поиск в Telegram требует отдельной интеграции; сейчас Telegram-посты попадают через Yandex.
+- HTML-поиск Yandex может меняться — для продакшена лучше API-ключ.
+- VK API `newsfeed.search` ищет публичные посты, доступные методу; для полноты используйте и Yandex `site:vk.com`.
+- Упоминания без даты публикации включаются в отчёт с пометкой «не указана» — проверьте вручную.

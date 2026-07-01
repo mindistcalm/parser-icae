@@ -1,0 +1,3 @@
+[console_scripts]
+icae-parser = parser.cli:app
+icae-web = parser.api.server:main
