@@ -1,9 +1,3 @@
-export interface Settings {
-  vk_access_token: string
-  yandex_search_api_key: string
-  yandex_folder_id: string
-}
-
 export interface Mention {
   source_name: string
   title: string
@@ -32,9 +26,8 @@ export interface Dashboard {
     city: string
   }
   providers: {
-    vk: boolean
-    yandex: boolean
-    web_fallback: string
+    web: string
+    rss: boolean
   }
   previous_month: string
   months: MonthSummary[]
@@ -92,14 +85,6 @@ async function getManifest(): Promise<Dashboard> {
 
 const liveApi = {
   dashboard: () => request<Dashboard>("/api/dashboard"),
-  settings: {
-    get: () => request<Settings>("/api/settings"),
-    save: (data: Settings) =>
-      request<Settings>("/api/settings", {
-        method: "PUT",
-        body: JSON.stringify(data),
-      }),
-  },
   mentions: (month: string) =>
     request<Mention[]>(`/api/mentions?month=${encodeURIComponent(month)}`),
   months: () => request<MonthSummary[]>("/api/months"),
@@ -115,16 +100,6 @@ const liveApi = {
 
 const staticApi = {
   dashboard: getManifest,
-  settings: {
-    get: async (): Promise<Settings> => ({
-      vk_access_token: "",
-      yandex_search_api_key: "",
-      yandex_folder_id: "",
-    }),
-    save: async (): Promise<Settings> => {
-      throw new Error("На GitHub Pages настройки недоступны — используйте локальный сервер")
-    },
-  },
   mentions: (month: string) =>
     staticGet<Mention[]>(assetUrl(`data/mentions-${month}.json`)).catch(() => []),
   months: async () => (await getManifest()).months,

@@ -4,14 +4,12 @@ import time
 from collections.abc import Callable
 from datetime import date
 
-from parser.config import AppConfig, EnvSettings, load_config, load_env
+from parser.config import AppConfig, load_config
 from parser.filters import filter_mentions
 from parser.metadata import fetch_publication_date
 from parser.models import Mention
 from parser.search.duckduckgo import DuckDuckGoSearchProvider
 from parser.search.rss import RssSearchProvider
-from parser.search.vk import VkSearchProvider
-from parser.search.yandex import YandexSearchProvider
 from parser.storage import MentionStorage
 
 
@@ -27,23 +25,11 @@ def previous_month(today: date | None = None) -> tuple[int, int]:
 
 
 class SearchEngine:
-    def __init__(
-        self,
-        config: AppConfig | None = None,
-        env: EnvSettings | None = None,
-    ) -> None:
+    def __init__(self, config: AppConfig | None = None) -> None:
         self.config = config or load_config()
-        self.env = env or load_env()
         self.storage = MentionStorage(self.config.storage.database_path)
-        self.web_provider: YandexSearchProvider | DuckDuckGoSearchProvider
-        if self.env.yandex_search_api_key and self.env.yandex_folder_id:
-            self.web_provider = YandexSearchProvider(self.config, self.env)
-        else:
-            self.web_provider = DuckDuckGoSearchProvider(self.config)
-
         self.providers = [
-            self.web_provider,
-            VkSearchProvider(self.config, self.env),
+            DuckDuckGoSearchProvider(self.config),
             RssSearchProvider(self.config),
         ]
 
@@ -64,23 +50,11 @@ class SearchEngine:
         all_mentions: list[Mention] = []
         report_month = month_label(year, month)
 
-        vk_queries = list(self.config.search_keywords)
-        vk_queries.append("site:vk.com " + self.config.organization.short_name)
-
-        web_name = self.web_provider.name
+        web_queries = list(self.config.search_keywords)
+        web_queries.append("site:vk.com " + self.config.organization.short_name)
 
         for provider in self.providers:
-            queries = (
-                vk_queries
-                if provider.name in (web_name, "Yandex")
-                else self.config.search_keywords
-                if provider.name == "VK"
-                else ["rss"]
-            )
-
-            if provider.name == "VK" and not self.env.vk_access_token:
-                log("  [VK] пропущен — задайте VK_ACCESS_TOKEN в env.txt")
-                continue
+            queries = web_queries if provider.name == "DuckDuckGo" else ["rss"]
 
             log(f"  [{provider.name}] поиск...")
 
@@ -111,9 +85,8 @@ class SearchEngine:
                 rss_count = sum(1 for m in all_mentions if m.source_type.value == "rss")
                 log(f"    RSS: релевантных записей {rss_count}")
 
-        # Финальная дедупликация + обогащение дат
         deduped = filter_mentions(all_mentions, self.config, year, month)
-        deduped = self._enrich_dates(deduped, year, month, on_progress=on_progress)
+        deduped = self._enrich_dates(deduped, on_progress=on_progress)
         deduped = filter_mentions(deduped, self.config, year, month)
         inserted = self.storage.save_mentions(deduped, report_month)
 
@@ -127,8 +100,6 @@ class SearchEngine:
     def _enrich_dates(
         self,
         mentions: list[Mention],
-        year: int,
-        month: int,
         *,
         on_progress: Callable[[str], None] | None = None,
     ) -> list[Mention]:

@@ -4,7 +4,6 @@ import { AppShell } from "@/components/layout/AppShell"
 import { DashboardPage } from "@/pages/DashboardPage"
 import { MentionsPage } from "@/pages/MentionsPage"
 import { ReportsPage } from "@/pages/ReportsPage"
-import { SettingsPage } from "@/pages/SettingsPage"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,7 +25,6 @@ export default function App() {
             <Route index element={<DashboardPage />} />
             <Route path="mentions" element={<MentionsPage />} />
             <Route path="reports" element={<ReportsPage />} />
-            <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

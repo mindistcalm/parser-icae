@@ -2,11 +2,10 @@ from __future__ import annotations
 
 import re
 from datetime import date
-from pathlib import Path
 
 import typer
 
-from parser.config import find_project_root, load_config
+from parser.config import load_config
 from parser.engine import SearchEngine, month_label, previous_month
 from parser.report import ReportGenerator
 
@@ -97,25 +96,6 @@ def run_cmd(
     typer.echo("\nОтчёт:")
     typer.echo(f"  Excel: {xlsx_path}")
     typer.echo(f"  HTML:  {html_path}")
-
-
-@app.command("init")
-def init_cmd() -> None:
-    """Создать .env из примера, если его ещё нет."""
-    root = find_project_root()
-    env_path = root / ".env"
-    example_path = root / ".env.example"
-
-    if env_path.exists():
-        typer.echo(f".env уже существует: {env_path}")
-        return
-
-    if not example_path.exists():
-        typer.echo("Файл .env.example не найден", err=True)
-        raise typer.Exit(code=1)
-
-    env_path.write_text(example_path.read_text(encoding="utf-8"), encoding="utf-8")
-    typer.echo(f"Создан {env_path}. Заполните токены API.")
 
 
 def main() -> None:

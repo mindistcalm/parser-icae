@@ -11,9 +11,9 @@ export function StaticModeBanner() {
       <div className="text-sm">
         <p className="font-medium text-blue-900">Режим GitHub Pages</p>
         <p className="text-blue-800">
-          Отображаются сохранённые отчёты. Запуск поиска и настройка API-ключей — только в локальной версии (
+          Отображаются сохранённые отчёты. Для нового поиска запустите локально (
           <code className="rounded bg-blue-100 px-1">./start-web.sh</code>
-          ).
+          ) или workflow с опцией run_parser.
         </p>
       </div>
     </Alert>

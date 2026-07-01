@@ -70,11 +70,8 @@ def export() -> None:
     manifest = {
         "organization": config.organization.model_dump(),
         "providers": {
-            "vk": bool(env.vk_access_token),
-            "yandex": bool(env.yandex_search_api_key and env.yandex_folder_id),
-            "web_fallback": "DuckDuckGo"
-            if not (env.yandex_search_api_key and env.yandex_folder_id)
-            else "Yandex API",
+            "web": "DuckDuckGo",
+            "rss": bool(config.rss_feeds),
         },
         "previous_month": month_label(py, pm),
         "months": months,

@@ -10,7 +10,6 @@ src/parser/__init__.py
 src/parser/cli.py
 src/parser/config.py
 src/parser/engine.py
-src/parser/env_store.py
 src/parser/filters.py
 src/parser/metadata.py
 src/parser/models.py
@@ -25,5 +24,3 @@ src/parser/search/__init__.py
 src/parser/search/base.py
 src/parser/search/duckduckgo.py
 src/parser/search/rss.py
-src/parser/search/vk.py
-src/parser/search/yandex.py

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -14,22 +13,9 @@ class JobStatus(str, Enum):
     FAILED = "failed"
 
 
-class SettingsOut(BaseModel):
-    vk_access_token: str = ""
-    yandex_search_api_key: str = ""
-    yandex_folder_id: str = ""
-
-
-class SettingsIn(BaseModel):
-    vk_access_token: str = ""
-    yandex_search_api_key: str = ""
-    yandex_folder_id: str = ""
-
-
 class ProviderStatus(BaseModel):
-    vk: bool
-    yandex: bool
-    web_fallback: str
+    web: str = "DuckDuckGo"
+    rss: bool = False
 
 
 class OrganizationOut(BaseModel):

@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import threading
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
 from parser.api.schemas import JobOut, JobStatus
-from parser.config import load_config, load_env
+from parser.config import load_config
 from parser.engine import SearchEngine, month_label
 from parser.report import ReportGenerator
 
@@ -26,7 +26,7 @@ class JobManager:
             id=job_id,
             status=JobStatus.PENDING,
             month=month_str,
-            started_at=datetime.now(timezone.utc),
+            started_at=datetime.now(),
         )
         with self._lock:
             self._jobs[job_id] = job
@@ -42,8 +42,7 @@ class JobManager:
     def _update(self, job_id: str, **kwargs) -> None:
         with self._lock:
             job = self._jobs[job_id]
-            updated = job.model_copy(update=kwargs)
-            self._jobs[job_id] = updated
+            self._jobs[job_id] = job.model_copy(update=kwargs)
 
     def _append_log(self, job_id: str, message: str) -> None:
         with self._lock:
@@ -55,18 +54,13 @@ class JobManager:
         self._update(job_id, status=JobStatus.RUNNING)
         try:
             config = load_config()
-            env = load_env()
-            engine = SearchEngine(config, env)
+            engine = SearchEngine(config)
 
             def on_progress(msg: str) -> None:
                 self._append_log(job_id, msg)
 
-            self._append_log(
-                job_id, f"Старт поиска за {month_label(year, month)}"
-            )
-            mentions = engine.collect(
-                year, month, verbose=False, on_progress=on_progress
-            )
+            self._append_log(job_id, f"Старт поиска за {month_label(year, month)}")
+            mentions = engine.collect(year, month, verbose=False, on_progress=on_progress)
 
             generator = ReportGenerator(config)
             xlsx_path, html_path = generator.generate(mentions, year, month)
@@ -77,7 +71,7 @@ class JobManager:
                 mentions_count=len(mentions),
                 report_xlsx=xlsx_path.name,
                 report_html=html_path.name,
-                finished_at=datetime.now(timezone.utc),
+                finished_at=datetime.now(),
             )
             self._append_log(job_id, "Готово!")
         except Exception as exc:
@@ -85,7 +79,7 @@ class JobManager:
                 job_id,
                 status=JobStatus.FAILED,
                 error=str(exc),
-                finished_at=datetime.now(timezone.utc),
+                finished_at=datetime.now(),
             )
             self._append_log(job_id, f"Ошибка: {exc}")
 

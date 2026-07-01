@@ -19,12 +19,9 @@ from parser.api.schemas import (
     ReportFile,
     RunRequest,
     RunResponse,
-    SettingsIn,
-    SettingsOut,
 )
-from parser.config import find_project_root, load_config, load_env
+from parser.config import find_project_root, load_config
 from parser.engine import SearchEngine, month_label, previous_month
-from parser.env_store import read_env_file, write_env_file
 from parser.report import MONTH_NAMES_RU
 
 app = FastAPI(title="ИЦАЭ Parser API", version="1.0.0")
@@ -91,37 +88,19 @@ def health() -> dict[str, str]:
 @app.get("/api/dashboard", response_model=DashboardOut)
 def dashboard() -> DashboardOut:
     config = load_config()
-    env = load_env()
-    engine = SearchEngine(config, env)
+    engine = SearchEngine(config)
     py, pm = previous_month()
 
     return DashboardOut(
         organization=OrganizationOut(**config.organization.model_dump()),
         providers=ProviderStatus(
-            vk=bool(env.vk_access_token),
-            yandex=bool(env.yandex_search_api_key and env.yandex_folder_id),
-            web_fallback="DuckDuckGo"
-            if not (env.yandex_search_api_key and env.yandex_folder_id)
-            else "Yandex API",
+            web="DuckDuckGo",
+            rss=bool(config.rss_feeds),
         ),
         previous_month=month_label(py, pm),
-        months=[
-            MonthSummary(**m) for m in engine.storage.list_months()
-        ],
+        months=[MonthSummary(**m) for m in engine.storage.list_months()],
         latest_reports=_list_reports()[:10],
     )
-
-
-@app.get("/api/settings", response_model=SettingsOut)
-def get_settings() -> SettingsOut:
-    return SettingsOut(**read_env_file())
-
-
-@app.put("/api/settings", response_model=SettingsOut)
-def save_settings(body: SettingsIn) -> SettingsOut:
-    data = body.model_dump()
-    write_env_file(data)
-    return SettingsOut(**data)
 
 
 @app.get("/api/mentions", response_model=list[MentionOut])

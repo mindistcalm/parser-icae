@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import yaml
 from pydantic import BaseModel, Field
-from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class OrganizationConfig(BaseModel):
@@ -47,18 +45,6 @@ class AppConfig(BaseModel):
     reports: ReportsConfig = Field(default_factory=ReportsConfig)
 
 
-class EnvSettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore",
-    )
-
-    vk_access_token: str = ""
-    yandex_search_api_key: str = ""
-    yandex_folder_id: str = ""
-
-
 def find_project_root() -> Path:
     current = Path(__file__).resolve().parent
     for parent in [current, *current.parents]:
@@ -73,17 +59,3 @@ def load_config(config_path: Path | None = None) -> AppConfig:
     with path.open(encoding="utf-8") as f:
         raw = yaml.safe_load(f)
     return AppConfig.model_validate(raw)
-
-
-def load_env() -> EnvSettings:
-    from parser.env_store import env_file_exists, env_file_path, read_env_file
-
-    root = find_project_root()
-    if env_file_exists():
-        data = read_env_file()
-        return EnvSettings(**data)
-
-    env_path = root / ".env"
-    if env_path.exists():
-        return EnvSettings(_env_file=str(env_path))
-    return EnvSettings()

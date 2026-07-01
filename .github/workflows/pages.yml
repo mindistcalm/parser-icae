@@ -33,19 +33,6 @@ jobs:
       - name: Install Python dependencies
         run: pip install -e .
 
-      - name: Write API keys from secrets
-        if: ${{ secrets.VK_ACCESS_TOKEN != '' || secrets.YANDEX_SEARCH_API_KEY != '' }}
-        env:
-          VK_ACCESS_TOKEN: ${{ secrets.VK_ACCESS_TOKEN }}
-          YANDEX_SEARCH_API_KEY: ${{ secrets.YANDEX_SEARCH_API_KEY }}
-          YANDEX_FOLDER_ID: ${{ secrets.YANDEX_FOLDER_ID }}
-        run: |
-          cat > env.txt <<EOF
-          VK_ACCESS_TOKEN=${VK_ACCESS_TOKEN}
-          YANDEX_SEARCH_API_KEY=${YANDEX_SEARCH_API_KEY}
-          YANDEX_FOLDER_ID=${YANDEX_FOLDER_ID}
-          EOF
-
       - name: Run monthly parser
         if: github.event.inputs.run_parser == 'true'
         run: icae-parser run

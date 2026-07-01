@@ -83,35 +83,43 @@ export function DashboardPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Веб-поиск</CardDescription>
-            <CardTitle className="text-lg">{data?.providers.web_fallback}</CardTitle>
+            <CardTitle className="text-lg">{data?.providers.web}</CardTitle>
           </CardHeader>
           <CardContent>
-            <Badge variant={data?.providers.yandex ? "success" : "secondary"}>
-              {data?.providers.yandex ? "Yandex API" : "без API-ключа"}
-            </Badge>
+            <Badge variant="success">без API-ключей</Badge>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>ВКонтакте</CardDescription>
-            <CardTitle className="text-lg">
-              {data?.providers.vk ? "Подключён" : "Не настроен"}
-            </CardTitle>
+            <CardTitle className="text-lg">через site:vk.com</CardTitle>
           </CardHeader>
           <CardContent>
-            <Badge variant={data?.providers.vk ? "success" : "warning"}>
-              {data?.providers.vk ? "токен задан" : "нужен VK_ACCESS_TOKEN"}
-            </Badge>
+            <Badge variant="secondary">в составе веб-поиска</Badge>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>За {formatMonthLabel(month)}</CardDescription>
-            <CardTitle className="text-3xl">{monthCount}</CardTitle>
+            <CardDescription>RSS-ленты</CardDescription>
+            <CardTitle className="text-lg">
+              {data?.providers.rss ? "Подключены" : "Не настроены"}
+            </CardTitle>
           </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">упоминаний в базе</CardContent>
+          <CardContent>
+            <Badge variant={data?.providers.rss ? "success" : "secondary"}>
+              {data?.providers.rss ? "есть в config.yaml" : "можно добавить"}
+            </Badge>
+          </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardDescription>За {formatMonthLabel(month)}</CardDescription>
+          <CardTitle className="text-3xl">{monthCount}</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground">упоминаний в базе</CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

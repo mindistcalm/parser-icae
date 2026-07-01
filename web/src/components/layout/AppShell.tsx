@@ -1,11 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom"
-import {
-  LayoutDashboard,
-  List,
-  FileSpreadsheet,
-  Settings,
-  Atom,
-} from "lucide-react"
+import { LayoutDashboard, List, FileSpreadsheet, Atom } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
 
@@ -13,7 +7,6 @@ const nav = [
   { to: "/", label: "Главная", icon: LayoutDashboard },
   { to: "/mentions", label: "Упоминания", icon: List },
   { to: "/reports", label: "Отчёты", icon: FileSpreadsheet },
-  { to: "/settings", label: "Настройки", icon: Settings },
 ]
 
 export function AppShell() {
