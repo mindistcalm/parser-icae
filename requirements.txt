@@ -7,5 +7,6 @@ pyyaml>=6.0
 openpyxl>=3.1
 python-dateutil>=2.9
 lxml>=5.0
+ddgs>=9.0
 fastapi>=0.115
 uvicorn[standard]>=0.32

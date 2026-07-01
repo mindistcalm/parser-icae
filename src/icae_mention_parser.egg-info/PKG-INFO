@@ -12,6 +12,7 @@ Requires-Dist: pyyaml>=6.0
 Requires-Dist: openpyxl>=3.1
 Requires-Dist: python-dateutil>=2.9
 Requires-Dist: lxml>=5.0
+Requires-Dist: ddgs>=9.0
 Requires-Dist: fastapi>=0.115
 Requires-Dist: uvicorn[standard]>=0.32
 

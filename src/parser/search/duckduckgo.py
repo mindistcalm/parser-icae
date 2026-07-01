@@ -3,17 +3,14 @@ from __future__ import annotations
 import re
 import time
 from datetime import datetime
-from urllib.parse import parse_qs, unquote, urlparse
+from urllib.parse import urlparse
 
-import httpx
-from bs4 import BeautifulSoup
 from dateutil import parser as date_parser
+from ddgs import DDGS
 
 from parser.config import AppConfig
 from parser.models import Mention, SourceType
 from parser.search.base import SearchProvider
-
-DDG_URL = "https://html.duckduckgo.com/html/"
 
 MONTH_NAMES_RU = {
     1: "январь",
@@ -41,61 +38,45 @@ class DuckDuckGoSearchProvider(SearchProvider):
     def search(self, query: str, year: int, month: int) -> list[Mention]:
         month_name = MONTH_NAMES_RU[month]
         enriched_query = f"{query} {month_name} {year}"
-
-        mentions: list[Mention] = []
-        offset = 0
-        page_size = 30
         max_results = self.config.search.max_results_per_query
 
-        headers = {
-            "User-Agent": (
-                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-                "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
-            ),
-        }
-
-        with httpx.Client(timeout=30, follow_redirects=True) as client:
-            while len(mentions) < max_results:
-                data = {"q": enriched_query, "kl": "ru-ru", "s": str(offset)}
-                resp = client.post(DDG_URL, data=data, headers=headers)
-                resp.raise_for_status()
-
-                soup = BeautifulSoup(resp.text, "lxml")
-                results = soup.select(".result")
-                if not results:
-                    break
-
+        mentions: list[Mention] = []
+        try:
+            with DDGS() as ddgs:
+                results = ddgs.text(
+                    enriched_query,
+                    region="ru-ru",
+                    max_results=max_results,
+                )
                 for item in results:
                     mention = self._parse_result(item, query, year, month)
                     if mention:
                         mentions.append(mention)
-                    if len(mentions) >= max_results:
-                        break
+        except Exception:
+            # Повтор без месяца — DDG иногда не находит по дате в запросе
+            with DDGS() as ddgs:
+                results = ddgs.text(
+                    query,
+                    region="ru-ru",
+                    max_results=max_results,
+                )
+                for item in results:
+                    mention = self._parse_result(item, query, year, month)
+                    if mention:
+                        mentions.append(mention)
 
-                # Следующая страница
-                next_btn = soup.select_one("input.result--more__btn")
-                if not next_btn or len(results) < page_size:
-                    break
-                offset += page_size
-                time.sleep(self.delay)
-
+        time.sleep(self.delay)
         return mentions
 
     def _parse_result(
-        self, item, query: str, year: int, month: int
+        self, item: dict, query: str, year: int, month: int
     ) -> Mention | None:
-        link = item.select_one("a.result__a")
-        if not link:
-            return None
-
-        url = self._resolve_url(link.get("href", ""))
+        url = item.get("href", "")
         if not url.startswith("http"):
             return None
 
-        title = link.get_text(strip=True)
-        snippet_el = item.select_one(".result__snippet")
-        snippet = snippet_el.get_text(" ", strip=True) if snippet_el else ""
-
+        title = item.get("title", "").strip()
+        snippet = item.get("body", "").strip()
         published = self._extract_date_from_snippet(snippet, year, month)
 
         return Mention(
@@ -107,16 +88,6 @@ class DuckDuckGoSearchProvider(SearchProvider):
             snippet=snippet,
             search_query=query,
         )
-
-    @staticmethod
-    def _resolve_url(href: str) -> str:
-        if href.startswith("//"):
-            href = "https:" + href
-        if "uddg=" in href:
-            parsed = urlparse(href)
-            uddg = parse_qs(parsed.query).get("uddg", [""])[0]
-            return unquote(uddg)
-        return href
 
     @staticmethod
     def _host_name(url: str) -> str:
@@ -131,7 +102,6 @@ class DuckDuckGoSearchProvider(SearchProvider):
     def _extract_date_from_snippet(
         snippet: str, year: int, month: int
     ) -> datetime | None:
-        # DDG иногда показывает дату в сниппете
         patterns = [
             r"(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{4})",
             r"(\d{1,2})\s+(январ|феврал|март|апрел|ма[йя]|июн|июл|август|сентябр|октябр|ноябр|декабр)\w*\s+(\d{4})",
