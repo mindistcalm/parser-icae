@@ -37,13 +37,15 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Restore parser database cache
+      - name: Restore parser cache
         uses: actions/cache@v4
         with:
-          path: data/mentions.db
-          key: mentions-db-${{ github.run_id }}
+          path: |
+            data/mentions.db
+            reports
+          key: parser-cache-${{ github.run_id }}
           restore-keys: |
-            mentions-db-
+            parser-cache-
 
       - name: Install Python dependencies
         run: pip install -e .
@@ -78,14 +80,13 @@ jobs:
           npm run build
           cp dist/index.html dist/404.html
 
-      - name: Save parser database cache
-        if: >
-          github.event_name == 'schedule' ||
-          github.event.inputs.run_parser == 'true'
+      - name: Save parser cache
         uses: actions/cache/save@v4
         with:
-          path: data/mentions.db
-          key: mentions-db-${{ github.run_id }}
+          path: |
+            data/mentions.db
+            reports
+          key: parser-cache-${{ github.run_id }}
 
       - uses: actions/upload-pages-artifact@v3
         with:

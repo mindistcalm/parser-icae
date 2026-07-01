@@ -102,12 +102,44 @@ async function staticGet<T>(url: string): Promise<T> {
 }
 
 let manifestCache: Dashboard | null = null
+let manifestPromise: Promise<Dashboard> | null = null
 
 async function getManifest(): Promise<Dashboard> {
-  if (!manifestCache) {
-    manifestCache = await staticGet<Dashboard>(assetUrl("data/manifest.json"))
+  if (manifestCache) return manifestCache
+  if (!manifestPromise) {
+    manifestPromise = staticGet<Dashboard>(assetUrl("data/manifest.json"))
+      .then((data) => {
+        manifestCache = data
+        return data
+      })
+      .catch((err) => {
+        manifestPromise = null
+        throw err
+      })
   }
-  return manifestCache
+  return manifestPromise
+}
+
+async function getReports(): Promise<ReportFile[]> {
+  const manifest = await getManifest()
+  if (manifest.latest_reports?.length) return manifest.latest_reports
+  const fromFile = await staticGet<ReportFile[]>(assetUrl("data/reports.json")).catch(
+    () => []
+  )
+  if (fromFile.length) return fromFile
+  return reportsFromMonths(manifest.months)
+}
+
+/** Ссылки на отчёты по списку месяцев, если reports.json пуст */
+export function reportsFromMonths(months: MonthSummary[]): ReportFile[] {
+  return months.flatMap((m) => {
+    const [year, mon] = m.month.split("-")
+    const base = `icae_mentions_${year}_${mon}`
+    return [
+      { filename: `${base}.html`, month: m.month, kind: "html", size: 0 },
+      { filename: `${base}.xlsx`, month: m.month, kind: "xlsx", size: 0 },
+    ]
+  })
 }
 
 const liveApi = {
@@ -129,7 +161,7 @@ const liveApi = {
       body: JSON.stringify({ month }),
     }),
   job: (id: string) => request<Job>(`/api/jobs/${id}`),
-  reports: () => request<ReportFile[]>("/api/reports"),
+  reports: () => getReports(),
   reportUrl: (filename: string) => `/api/reports/${filename}`,
 }
 
@@ -154,7 +186,7 @@ const staticApi = {
   job: async () => {
     throw new Error("Задачи недоступны на GitHub Pages")
   },
-  reports: async () => (await getManifest()).latest_reports,
+  reports: getReports,
   reportUrl: (filename: string) => assetUrl(`reports/${filename}`),
 }
 

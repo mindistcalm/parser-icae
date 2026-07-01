@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Play, CheckCircle2, AlertCircle, Loader2 } from "lucide-react"
-import { api, isStaticMode, type Job } from "@/lib/api"
+import { api, isStaticMode, reportsFromMonths, type Job } from "@/lib/api"
 import { formatMonthLabel } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -55,6 +55,12 @@ export function DashboardPage() {
     () => data?.months.find((m) => m.month === month)?.count ?? 0,
     [data, month]
   )
+
+  const staticReports = useMemo(() => {
+    if (!data || !isStaticMode) return []
+    if (data.latest_reports?.length) return data.latest_reports
+    return reportsFromMonths(data.months)
+  }, [data])
 
   if (isLoading) {
     return (
@@ -164,9 +170,9 @@ export function DashboardPage() {
           </div>
           )}
 
-          {isStaticMode && data?.latest_reports && data.latest_reports.length > 0 && (
+          {isStaticMode && staticReports.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              {data.latest_reports.slice(0, 4).map((r) => (
+              {staticReports.slice(0, 6).map((r) => (
                 <a
                   key={r.filename}
                   href={api.reportUrl(r.filename)}

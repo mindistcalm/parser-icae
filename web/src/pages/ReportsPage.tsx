@@ -61,7 +61,7 @@ export function ReportsPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="font-mono text-xs">{file.filename}</TableCell>
-                    <TableCell>{formatFileSize(file.size)}</TableCell>
+                    <TableCell>{file.size ? formatFileSize(file.size) : "—"}</TableCell>
                     <TableCell>
                       <a
                         href={api.reportUrl(file.filename)}
