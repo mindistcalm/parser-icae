@@ -22,9 +22,85 @@
 
 Токены и API-ключи **не требуются**.
 
+## Требования
+
+| Компонент | Версия | Зачем |
+|-----------|--------|-------|
+| Python | 3.10+ | парсер, API |
+| Node.js | 18+ | сборка веб-интерфейса |
+| Git | любая | клонирование репозитория |
+
+### Установка требований (одна команда)
+
+**Windows (PowerShell или cmd):**
+
+```powershell
+git clone https://github.com/mindistcalm/parser-icae.git
+cd parser-icae
+.\install-deps.bat
+.\run.bat
+```
+
+**Linux / macOS:**
+
+```bash
+git clone https://github.com/mindistcalm/parser-icae.git
+cd parser-icae
+chmod +x install-deps.sh run.sh
+./install-deps.sh
+./run.sh
+```
+
+### Установка вручную
+
+**Windows (winget):**
+
+```powershell
+winget install Python.Python.3.12
+winget install OpenJS.NodeJS.LTS
+```
+
+После установки **перезапустите терминал**. При установке Python отметьте **Add python.exe to PATH**.
+
+**Ubuntu / Debian:**
+
+```bash
+sudo apt update
+sudo apt install -y python3 python3-venv python3-pip curl
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt install -y nodejs
+```
+
+**Fedora:**
+
+```bash
+sudo dnf install -y python3 python3-pip nodejs npm
+```
+
+**macOS (Homebrew):**
+
+```bash
+brew install python@3.12 node
+```
+
+### Проверка
+
+```bash
+python3 --version    # Python 3.10+
+node -v            # v18+
+npm -v
+```
+
+Windows:
+
+```powershell
+py -3 --version
+node -v
+```
+
 ## Быстрый старт (одна команда)
 
-Нужны **Python 3.10+** и **Node.js 18+** (для веб-интерфейса).
+Нужны **Python 3.10+** и **Node.js 18+** (см. выше, если ещё не установлены).
 
 ### Windows
 
