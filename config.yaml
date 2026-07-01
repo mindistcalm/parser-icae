@@ -52,8 +52,14 @@ exclude_url_patterns:
   - "/org/"
   - "/company/"
 
-# RSS-ленты (добавьте рабочие URL; многие томские СМИ RSS не публикуют)
-rss_feeds: []
+# RSS-ленты томских СМИ и вузов
+rss_feeds:
+  - name: "Томск.ru"
+    url: "https://tomsk.ru/rss/"
+  - name: "АиФ Томск"
+    url: "https://tomsk.aif.ru/rss/all.php"
+  - name: "Новости ТГУ"
+    url: "https://history.tsu.ru/news/feed"
 
 search:
   max_results_per_query: 50

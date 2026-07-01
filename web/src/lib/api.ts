@@ -19,6 +19,32 @@ export interface ReportFile {
   size: number
 }
 
+export interface AppConfig {
+  organization: {
+    full_name: string
+    short_name: string
+    city: string
+  }
+  search_keywords: string[]
+  mention_patterns: string[]
+  city_patterns: string[]
+  exclude_domains: string[]
+  exclude_urls: string[]
+  exclude_url_fragments: string[]
+  exclude_url_patterns: string[]
+  rss_feeds: { name: string; url: string }[]
+  search: {
+    max_results_per_query: number
+    request_delay_seconds: number
+  }
+  storage: {
+    database_path: string
+  }
+  reports: {
+    output_dir: string
+  }
+}
+
 export interface Dashboard {
   organization: {
     full_name: string
@@ -32,6 +58,7 @@ export interface Dashboard {
   previous_month: string
   months: MonthSummary[]
   latest_reports: ReportFile[]
+  config?: AppConfig
 }
 
 export type JobStatus = "pending" | "running" | "completed" | "failed"
@@ -85,6 +112,14 @@ async function getManifest(): Promise<Dashboard> {
 
 const liveApi = {
   dashboard: () => request<Dashboard>("/api/dashboard"),
+  config: {
+    get: () => request<AppConfig>("/api/config"),
+    save: (data: AppConfig) =>
+      request<AppConfig>("/api/config", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+  },
   mentions: (month: string) =>
     request<Mention[]>(`/api/mentions?month=${encodeURIComponent(month)}`),
   months: () => request<MonthSummary[]>("/api/months"),
@@ -100,6 +135,16 @@ const liveApi = {
 
 const staticApi = {
   dashboard: getManifest,
+  config: {
+    get: async (): Promise<AppConfig> => {
+      const manifest = await getManifest()
+      if (!manifest.config) throw new Error("Конфигурация не экспортирована")
+      return manifest.config
+    },
+    save: async () => {
+      throw new Error("На GitHub Pages конфигурацию нельзя изменить")
+    },
+  },
   mentions: (month: string) =>
     staticGet<Mention[]>(assetUrl(`data/mentions-${month}.json`)).catch(() => []),
   months: async () => (await getManifest()).months,

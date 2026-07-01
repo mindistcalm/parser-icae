@@ -66,7 +66,6 @@ def export() -> None:
             for m in mentions
         ]
 
-    env = engine.env
     manifest = {
         "organization": config.organization.model_dump(),
         "providers": {
@@ -76,6 +75,7 @@ def export() -> None:
         "previous_month": month_label(py, pm),
         "months": months,
         "latest_reports": _report_files()[:20],
+        "config": config.model_dump(mode="python"),
         "static": True,
     }
 

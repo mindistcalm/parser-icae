@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 
 from parser.api.jobs import job_manager
 from parser.api.schemas import (
+    AppConfigIn,
     DashboardOut,
     JobOut,
     MentionOut,
@@ -20,7 +21,7 @@ from parser.api.schemas import (
     RunRequest,
     RunResponse,
 )
-from parser.config import find_project_root, load_config
+from parser.config import AppConfig, find_project_root, load_config, save_config
 from parser.engine import SearchEngine, month_label, previous_month
 from parser.report import MONTH_NAMES_RU
 
@@ -162,6 +163,29 @@ def get_month_label(month: str) -> dict[str, str]:
         "month": month_label(year, mon),
         "label": f"{MONTH_NAMES_RU[mon]} {year}",
     }
+
+
+@app.get("/api/config", response_model=AppConfigIn)
+def get_config() -> AppConfigIn:
+    config = load_config()
+    return AppConfigIn.model_validate(config.model_dump())
+
+
+@app.put("/api/config", response_model=AppConfigIn)
+def update_config(body: AppConfigIn) -> AppConfigIn:
+    cleaned = body.model_copy(
+        update={
+            "rss_feeds": [
+                f for f in body.rss_feeds if f.name.strip() and f.url.strip()
+            ]
+        }
+    )
+    try:
+        config = AppConfig.model_validate(cleaned.model_dump())
+    except Exception as exc:
+        raise HTTPException(400, f"Некорректная конфигурация: {exc}") from exc
+    save_config(config)
+    return cleaned
 
 
 def mount_frontend() -> None:

@@ -59,3 +59,23 @@ def load_config(config_path: Path | None = None) -> AppConfig:
     with path.open(encoding="utf-8") as f:
         raw = yaml.safe_load(f)
     return AppConfig.model_validate(raw)
+
+
+def config_file_path() -> Path:
+    return find_project_root() / "config.yaml"
+
+
+def save_config(config: AppConfig, config_path: Path | None = None) -> None:
+    path = config_path or config_file_path()
+    data = config.model_dump(mode="python")
+    header = (
+        "# Конфигурация парсера ИЦАЭ\n"
+        "# Редактируется через веб-интерфейс или вручную\n\n"
+    )
+    body = yaml.dump(
+        data,
+        allow_unicode=True,
+        default_flow_style=False,
+        sort_keys=False,
+    )
+    path.write_text(header + body, encoding="utf-8")

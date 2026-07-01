@@ -72,3 +72,42 @@ class DashboardOut(BaseModel):
     previous_month: str
     months: list[MonthSummary]
     latest_reports: list[ReportFile]
+
+
+class RssFeedIn(BaseModel):
+    name: str
+    url: str
+
+
+class OrganizationIn(BaseModel):
+    full_name: str
+    short_name: str
+    city: str
+
+
+class SearchSettingsIn(BaseModel):
+    max_results_per_query: int = Field(ge=1, le=200)
+    request_delay_seconds: float = Field(ge=0.5, le=10)
+
+
+class StorageSettingsIn(BaseModel):
+    database_path: str
+
+
+class ReportsSettingsIn(BaseModel):
+    output_dir: str
+
+
+class AppConfigIn(BaseModel):
+    organization: OrganizationIn
+    search_keywords: list[str]
+    mention_patterns: list[str]
+    city_patterns: list[str]
+    exclude_domains: list[str] = Field(default_factory=list)
+    exclude_urls: list[str] = Field(default_factory=list)
+    exclude_url_fragments: list[str] = Field(default_factory=list)
+    exclude_url_patterns: list[str] = Field(default_factory=list)
+    rss_feeds: list[RssFeedIn] = Field(default_factory=list)
+    search: SearchSettingsIn = Field(default_factory=SearchSettingsIn)
+    storage: StorageSettingsIn = Field(default_factory=lambda: StorageSettingsIn(database_path="data/mentions.db"))
+    reports: ReportsSettingsIn = Field(default_factory=lambda: ReportsSettingsIn(output_dir="reports"))
