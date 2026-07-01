@@ -22,6 +22,40 @@
 
 Токены и API-ключи **не требуются**.
 
+## Быстрый старт (одна команда)
+
+Нужны **Python 3.10+** и **Node.js 18+** (для веб-интерфейса).
+
+### Windows
+
+```powershell
+git clone https://github.com/mindistcalm/parser-icae.git
+cd parser-icae
+.\run.bat
+```
+
+Или в PowerShell: `.\run.ps1`
+
+Двойной клик по `run.bat` тоже работает.
+
+### Linux / macOS
+
+```bash
+git clone https://github.com/mindistcalm/parser-icae.git
+cd parser-icae
+chmod +x run.sh
+./run.sh
+```
+
+Скрипт сам:
+1. создаёт `.venv` и ставит Python-зависимости
+2. делает `npm install` + сборку фронтенда (при первом запуске)
+3. открывает **http://localhost:8000**
+
+Другой порт: `PORT=8001 ./run.sh` (Windows: `$env:PORT=8001; .\run.ps1`)
+
+Пропустить сборку фронтенда: `SKIP_BUILD=1 ./run.sh`
+
 ## Веб-интерфейс
 
 UI на React + shadcn для запуска поиска, просмотра упоминаний и скачивания отчётов.
@@ -29,8 +63,7 @@ UI на React + shadcn для запуска поиска, просмотра у
 ### Запуск
 
 ```bash
-cd parser
-./start-web.sh
+./run.sh
 ```
 
 Откройте в браузере: **http://localhost:8000**
