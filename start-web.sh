@@ -17,5 +17,13 @@ if [ -d web/node_modules ]; then
   (cd web && npm run build)
 fi
 
-echo "Запуск на http://localhost:8000"
-.venv/bin/icae-web
+PORT="${PORT:-8000}"
+OLD_PID="$(lsof -ti :"$PORT" 2>/dev/null || true)"
+if [ -n "$OLD_PID" ]; then
+  echo "Порт $PORT занят (PID $OLD_PID) — останавливаю предыдущий сервер..."
+  kill $OLD_PID 2>/dev/null || true
+  sleep 1
+fi
+
+echo "Запуск на http://localhost:$PORT"
+PORT="$PORT" .venv/bin/icae-web
